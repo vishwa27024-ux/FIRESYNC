@@ -1,0 +1,13 @@
+﻿streamlit
+pandas
+numpy
+geopandas
+shapely
+pyarrow
+duckdb
+plotly
+pydeck
+scipy
+pytest
+python-dotenv
+jupyterlab
