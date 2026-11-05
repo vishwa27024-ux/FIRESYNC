@@ -1,14 +1,15 @@
-﻿.venv/
+﻿# Python environments
+.venv/
 __pycache__/
 *.py[cod]
+
+# Secrets
 .env
 .streamlit/secrets.toml
+
+# Testing and notebooks
 .pytest_cache/
 .ipynb_checkpoints/
 
-data/raw/*
-data/interim/*
-data/processed/*
-
-.DS_Store
-Thumbs.db
+# Research datasets and generated results
+/data/
