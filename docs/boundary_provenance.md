@@ -74,6 +74,12 @@ The closest observation is 0.295 km outside the boundary.
 - NTCA Tiger Reserve listing: https://ntca.gov.in/about-us/
 - WII MEE Bandipur:
   https://mee-tr.wii.gov.in/Home/Geospatial/bandipur-tiger-reserve
+  - Direct HTTPS access during FIRESYNC verification returned
+    Chrome `ERR_CERT_DATE_INVALID`.
+  - The source remains recorded for traceability; its certificate
+    warning must not be bypassed.
+- WII MEE Reports portal (alternative access):
+  https://wii.gov.in/mee-reports
 - WII Karnataka PA database:
   https://v1.wii.gov.in/eia/wildlife_database/karnataka
 - Gazette notification:
