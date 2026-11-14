@@ -11,3 +11,4 @@ scipy
 pytest
 python-dotenv
 jupyterlab
+scikit-learn

@@ -7,12 +7,18 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 import streamlit.components.v1 as components
 
 from src.science.association_engine import build_associations
 from src.science.optimized_association_engine import (
     build_associations_optimized,
+)
+from src.science.harmonization_engine import (
+    build_daily_analytical_units,
+    evaluate_harmonization_models,
+    generate_harmonized_dataset,
 )
 
 
@@ -45,6 +51,7 @@ ENGINE_CSV = (
 )
 
 BOUNDARY_DOCS = [
+    ROOT / "docs" / "harmonization_methodology.md",
     ROOT / "docs" / "boundary_provenance.md",
     ROOT / "docs" / "boundary_comparison.md",
 ]
@@ -3064,6 +3071,239 @@ elif page == "Harmonization Lab":
         "under selected conditions. They do not establish an optimal "
         "scientific threshold or confirm physical fire events."
     )
+
+    st.divider()
+
+    st.markdown(
+        "### 🔬 Statistical Sensor Harmonization & Calibration Engine"
+    )
+    st.caption(
+        "Addresses PRD FR-05: Calibrates sensor differences across overlapping observation "
+        "periods. Eliminates the 10×–20× raw detection inflation caused by VIIRS's finer 375 m "
+        "footprint without destroying physical fire activity signals, producing comparable "
+        "estimates with quantified 95% uncertainty intervals."
+    )
+
+    # 1. Controls
+    cal_col1, cal_col2 = st.columns([2, 1])
+    with cal_col1:
+        model_choice = st.selectbox(
+            "Calibration Model",
+            [
+                "Two-Stage Hurdle Model",
+                "Random Forest Harmonizer",
+                "Robust Log-Log Huber (Baseline)",
+                "Empirical Area Ratio (Baseline)",
+            ],
+            index=0,
+            key="harmonization_model_choice",
+            help="Select the statistical calibration model used to generate harmonized estimates.",
+        )
+    with cal_col2:
+        val_split = st.selectbox(
+            "Validation Holdout Year",
+            [2024, 2023, 2022],
+            index=0,
+            key="harmonization_val_split",
+            help="Observations from this year onward are held out as an independent test set.",
+        )
+
+    # 2. Run / Cache Model Training
+    with st.spinner("Calculating sensor calibration and evaluating models..."):
+        try:
+            source_data = df if len(df) >= 10 else df_all
+            analytical_units = build_daily_analytical_units(source_data)
+            metrics_table, trained_models = evaluate_harmonization_models(
+                analytical_units, split_year=val_split
+            )
+            harmonized_df = generate_harmonized_dataset(
+                source_data, preferred_model_name=model_choice
+            )
+        except Exception as exc:
+            st.error(f"Harmonization engine error: {exc}")
+            analytical_units = None
+            metrics_table = None
+            harmonized_df = None
+
+    if metrics_table is not None and harmonized_df is not None:
+        # 3. Model Benchmark & Evaluation Table
+        st.markdown("#### 1. Independent Validation & Model Comparison")
+        st.caption(
+            f"Evaluated on independent chronological holdout: Training (year < {val_split}) vs. "
+            f"Holdout Validation (year ≥ {val_split}). Metrics show predictive accuracy for MODIS-equivalent activity."
+        )
+        show_table(metrics_table, 230)
+
+        # 4. Summary Metrics Cards
+        cal_summary = st.columns(4)
+        total_viirs = harmonized_df["raw_viirs_count"].sum()
+        total_modis = harmonized_df["raw_modis_count"].sum()
+        total_calibrated = harmonized_df["calibrated_modis_equivalent"].sum()
+        disparity_reduction = (
+            ((total_viirs - total_calibrated) / total_viirs * 100.0)
+            if total_viirs > 0
+            else 0.0
+        )
+
+        cal_summary[0].metric(
+            "Raw VIIRS Detections",
+            f"{int(total_viirs):,}",
+            help="Uncalibrated total VIIRS hotspots (375 m resolution).",
+        )
+        cal_summary[1].metric(
+            "Raw MODIS Detections",
+            f"{int(total_modis):,}",
+            help="Native MODIS hotspots (1 km resolution).",
+        )
+        cal_summary[2].metric(
+            "Calibrated Estimate",
+            f"{total_calibrated:.1f}",
+            help="Harmonized MODIS-equivalent detection count.",
+        )
+        cal_summary[3].metric(
+            "Observational Bias Corrected",
+            f"{disparity_reduction:.1f}%",
+            help="Percentage of raw count inflation resolved by calibration.",
+        )
+
+        # 5. Interactive Raw vs. Harmonized Fire Trends
+        st.divider()
+        st.markdown("#### 2. Raw vs. Harmonized Fire Activity Time-Series")
+        st.caption(
+            "Notice how raw VIIRS counts surge due to higher spatial resolution (375 m vs 1 km), "
+            "whereas the Calibrated MODIS-Equivalent curve (with shaded 95% Confidence Band) "
+            "normalizes this disparity and enables valid historical comparisons."
+        )
+
+        trend_view = st.radio(
+            "Temporal Roll-up",
+            ["Monthly Aggregate", "Daily Observations"],
+            horizontal=True,
+            key="harmonization_trend_view",
+        )
+
+        if trend_view == "Monthly Aggregate":
+            harmonized_df["year_month"] = (
+                pd.to_datetime(harmonized_df["acq_date"]).dt.to_period("M").dt.to_timestamp()
+            )
+            plot_df = (
+                harmonized_df.groupby("year_month")
+                .agg(
+                    raw_viirs=("raw_viirs_count", "sum"),
+                    raw_modis=("raw_modis_count", "sum"),
+                    calibrated=("calibrated_modis_equivalent", "sum"),
+                    ci_lower=("ci_lower_95", "sum"),
+                    ci_upper=("ci_upper_95", "sum"),
+                )
+                .reset_index()
+            )
+            x_col = "year_month"
+            x_title = "Month"
+        else:
+            plot_df = harmonized_df.sort_values("acq_date")
+            x_col = "acq_date"
+            x_title = "Acquisition Date"
+
+        fig_trend = go.Figure()
+
+        # Shaded 95% Confidence Interval band
+        fig_trend.add_trace(
+            go.Scatter(
+                x=plot_df[x_col],
+                y=plot_df["ci_upper"],
+                mode="lines",
+                line=dict(width=0),
+                showlegend=False,
+                hoverinfo="skip",
+            )
+        )
+        fig_trend.add_trace(
+            go.Scatter(
+                x=plot_df[x_col],
+                y=plot_df["ci_lower"],
+                mode="lines",
+                line=dict(width=0),
+                fill="tonexty",
+                fillcolor="rgba(34, 211, 238, 0.15)",
+                name="95% Confidence Band",
+                hoverinfo="skip",
+            )
+        )
+
+        # Raw VIIRS
+        fig_trend.add_trace(
+            go.Scatter(
+                x=plot_df[x_col],
+                y=plot_df["raw_viirs"],
+                mode="lines+markers",
+                name="Raw VIIRS (375m)",
+                line=dict(color="#f5a742", width=2, dash="dot"),
+                marker=dict(size=5, color="#f5a742"),
+            )
+        )
+
+        # Raw MODIS
+        fig_trend.add_trace(
+            go.Scatter(
+                x=plot_df[x_col],
+                y=plot_df["raw_modis"],
+                mode="lines+markers",
+                name="Raw MODIS (1km)",
+                line=dict(color="#e11d48", width=2),
+                marker=dict(size=6, color="#e11d48"),
+            )
+        )
+
+        # Calibrated Estimate
+        fig_trend.add_trace(
+            go.Scatter(
+                x=plot_df[x_col],
+                y=plot_df["calibrated"],
+                mode="lines+markers",
+                name="Calibrated MODIS-Equivalent (Harmonized)",
+                line=dict(color="#22d3ee", width=3),
+                marker=dict(size=6, color="#22d3ee"),
+            )
+        )
+
+        fig_trend.update_layout(
+            title=f"Fire Activity Trends: Raw vs. Harmonized ({model_choice})",
+            xaxis_title=x_title,
+            yaxis_title="Observation Count",
+            hovermode="x unified",
+        )
+        st.plotly_chart(style_figure(fig_trend, height=450), use_container_width=True)
+
+        # 6. Data Quality & Attribution Distribution
+        st.divider()
+        qual_col1, qual_col2 = st.columns([1, 1])
+
+        with qual_col1:
+            st.markdown("#### 3. Data Quality Attribution")
+            st.caption("Every record is tagged to preserve observation provenance.")
+            flag_counts = (
+                harmonized_df["data_quality_flag"]
+                .value_counts()
+                .reset_index()
+            )
+            flag_counts.columns = ["Data Quality Flag", "Days"]
+            show_table(flag_counts, 220)
+
+        with qual_col2:
+            st.markdown("#### 4. Export Harmonized Dataset")
+            st.caption(
+                "Export calibrated daily records with raw observations, uncertainty bands, "
+                "and provenance flags for reproducible downstream research."
+            )
+            export_csv = harmonized_df.to_csv(index=False).encode("utf-8")
+            st.download_button(
+                label="📥 Download Harmonized Fire Activity Dataset · CSV",
+                data=export_csv,
+                file_name=f"firesync_harmonized_dataset_{model_choice.lower().replace(' ', '_')}.csv",
+                mime="text/csv",
+                key="download_harmonized_csv_btn",
+                type="primary",
+            )
 
 
 # ============================================================
