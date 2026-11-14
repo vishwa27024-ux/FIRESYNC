@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+import streamlit.components.v1 as components
 
 from src.science.association_engine import build_associations
 from src.science.optimized_association_engine import (
@@ -68,81 +69,193 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
 
-    @import url(
-        'https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500'
-        '&family=Manrope:wght@400;500;600;700;800&display=swap'
-    );
+    :root {
+        --fs-bg: #060d17;
+        --fs-panel: #0d1b2a;
+        --fs-panel-2: #112438;
+        --fs-border: #20384d;
+        --fs-text: #e8f1fb;
+        --fs-muted: #91a8bc;
+        --fs-cyan: #22d3ee;
+        --fs-amber: #f5a742;
+        --fs-teal: #48d6c5;
+    }
 
     html, body, [class*="css"] {
         font-family: 'Manrope', sans-serif;
     }
 
     .stApp {
-        background-color: #07111f;
-        color: #e8f1fb;
+        background:
+            radial-gradient(ellipse at 12% 0%, rgba(23, 67, 89, .20), transparent 38%),
+            linear-gradient(180deg, #07111f 0%, #050b14 100%);
+        color: var(--fs-text);
+    }
+
+    [data-testid="stHeader"] {
+        background: rgba(5, 11, 20, .72);
     }
 
     [data-testid="stSidebar"] {
-        background-color: #0c1929;
-        border-right: 1px solid #1d344a;
+        background: linear-gradient(180deg, #0b1928 0%, #08131f 100%);
+        border-right: 1px solid var(--fs-border);
+    }
+
+    [data-testid="stSidebar"] [data-testid="stRadio"] label {
+        padding-top: 5px;
+        padding-bottom: 5px;
     }
 
     [data-testid="stMetric"] {
-        background-color: #102237;
-        border: 1px solid #1e3a50;
-        padding: 14px 16px;
-        border-radius: 12px;
+        background: linear-gradient(145deg, rgba(17, 36, 56, .96), rgba(10, 25, 40, .96));
+        border: 1px solid #234257;
+        padding: 15px 17px;
+        border-radius: 13px;
+        min-height: 102px;
     }
 
     [data-testid="stMetricLabel"] {
         color: #9eb5c9;
+        font-size: .78rem;
+        font-weight: 700;
     }
 
     [data-testid="stMetricValue"] {
-        color: #e8f7ff;
+        color: #effaff;
+        font-weight: 800;
+        letter-spacing: -.03em;
     }
 
-    h1, h2, h3 {
-        letter-spacing: -0.03em;
+    h1, h2, h3, h4 {
+        letter-spacing: -.035em;
     }
+
+    h1 { font-weight: 800; }
+    h2, h3 { font-weight: 750; }
 
     .eyebrow {
-        color: #48d6c5;
+        color: var(--fs-teal);
         text-transform: uppercase;
-        letter-spacing: 0.16em;
-        font-size: 0.72rem;
+        letter-spacing: .17em;
+        font-size: .68rem;
         font-weight: 800;
     }
 
     .hero {
-        padding: 1.4rem;
+        padding: 1.45rem 1.55rem;
         border: 1px solid #1c4255;
-        border-radius: 16px;
+        border-radius: 17px;
         background:
-            linear-gradient(
-                115deg,
-                #10283a,
-                #0c1c2d 65%,
-                #102b35
-            );
-        margin-bottom: 1rem;
+            radial-gradient(ellipse at 90% 0%, rgba(43, 187, 190, .14), transparent 45%),
+            linear-gradient(115deg, #10283a, #0c1c2d 65%, #102b35);
+        margin-bottom: 1.25rem;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, .14);
     }
 
-    .hero h1 {
-        margin: 0.25rem 0;
-    }
+    .hero h1 { margin: .25rem 0 .35rem 0; }
 
     .muted {
-        color: #9eb5c9;
+        color: var(--fs-muted);
+        line-height: 1.65;
+    }
+
+    .section-intro {
+        padding: 1.15rem 1.35rem 1.2rem 1.35rem;
+        margin: .15rem 0 1.1rem 0;
+        border: 1px solid #1d3b51;
+        border-radius: 15px;
+        background:
+            radial-gradient(ellipse at 100% 0%, rgba(34, 211, 238, .09), transparent 48%),
+            linear-gradient(110deg, rgba(14, 33, 50, .96), rgba(9, 23, 37, .96));
+    }
+
+    .section-intro .section-eyebrow {
+        color: #54d6d0;
+        letter-spacing: .16em;
+        font-size: .66rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .section-intro h2 {
+        margin: .25rem 0 .35rem 0;
+        font-size: 1.75rem;
+        color: #eff8ff;
+        font-weight: 800;
+    }
+
+    .section-intro p {
+        color: #9cb2c4;
+        margin: 0;
+        line-height: 1.6;
+        font-size: .92rem;
+    }
+
+    .section-kicker {
+        color: #67cad7;
+        font-family: 'DM Mono', monospace;
+        font-size: .68rem;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+        margin-bottom: .35rem;
     }
 
     div[data-testid="stDataFrame"] {
         border: 1px solid #1e3a50;
-        border-radius: 10px;
+        border-radius: 11px;
         overflow: hidden;
+        background: rgba(8, 20, 33, .85);
     }
 
+    div[data-testid="stPlotlyChart"] {
+        border: 1px solid rgba(36, 67, 88, .72);
+        border-radius: 13px;
+        overflow: hidden;
+        background: rgba(7, 17, 29, .65);
+    }
+
+    [data-testid="stExpander"] {
+        border: 1px solid #20384d;
+        border-radius: 12px;
+        background: rgba(10, 25, 40, .58);
+    }
+
+    [data-testid="stTabs"] [role="tab"] {
+        font-weight: 700;
+    }
+
+    .stButton > button, .stDownloadButton > button {
+        border-radius: 9px;
+        border: 1px solid #2c6073;
+        font-weight: 750;
+        transition: all .18s ease;
+    }
+
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(100deg, #087f91, #0c9b9a);
+        border: 1px solid #36c5c1;
+        color: #f4ffff;
+    }
+
+    .stButton > button:hover, .stDownloadButton > button:hover {
+        border-color: #55d6d2;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    .stCaption, [data-testid="stCaptionContainer"] {
+        color: #879fb3;
+    }
+
+    hr {
+        border-color: #1c354a;
+    }
+
+    code, pre {
+        font-family: 'DM Mono', monospace;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -259,70 +372,203 @@ def show_table(data: pd.DataFrame, height=350):
     )
 
 
+def render_module_header(eyebrow: str, title: str, subtitle: str):
+    """Render a consistent, presentation-ready header for each module."""
+
+    st.markdown(
+        f"""
+        <section class="section-intro">
+            <div class="section-eyebrow">{eyebrow}</div>
+            <h2>{title}</h2>
+            <p>{subtitle}</p>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def style_figure(fig, height=None):
+    """Apply FIRESYNC's shared dark scientific chart styling."""
+
+    layout = {
+        "template": "plotly_dark",
+        "paper_bgcolor": "#07111f",
+        "plot_bgcolor": "#091827",
+        "font": {
+            "family": "Manrope, sans-serif",
+            "color": "#dceaf5",
+            "size": 12,
+        },
+        "margin": {"l": 18, "r": 18, "t": 38, "b": 18},
+        "legend": {
+            "bgcolor": "rgba(7, 17, 31, 0.72)",
+            "bordercolor": "#244258",
+            "borderwidth": 1,
+            "font": {"color": "#c5d6e3", "size": 11},
+        },
+        "hoverlabel": {
+            "bgcolor": "#10283a",
+            "bordercolor": "#3b7184",
+            "font": {"color": "#effaff", "family": "Manrope"},
+        },
+    }
+    if height is not None:
+        layout["height"] = height
+
+    fig.update_layout(**layout)
+
+    trace_types = {
+        getattr(trace, "type", None)
+        for trace in fig.data
+    }
+    is_map_figure = any(
+        trace_type in {"scattermap", "scattermapbox"}
+        for trace_type in trace_types
+    )
+
+    if not is_map_figure:
+        fig.update_xaxes(
+            gridcolor="rgba(120, 155, 180, 0.13)",
+            zerolinecolor="rgba(120, 155, 180, 0.18)",
+            linecolor="#29465b",
+        )
+        fig.update_yaxes(
+            gridcolor="rgba(120, 155, 180, 0.13)",
+            zerolinecolor="rgba(120, 155, 180, 0.18)",
+            linecolor="#29465b",
+        )
+    return fig
+
+
 # ============================================================
 # MAP GENERATOR
 # ============================================================
 
+
 def create_map(data: pd.DataFrame, height=620):
 
-    if data.empty:
+    if data is None or data.empty:
         return None
+
+    required = {"latitude", "longitude", "sensor_family"}
+    if not required.issubset(data.columns):
+        return None
+
+    map_data = data.copy()
+    map_data["latitude"] = pd.to_numeric(
+        map_data["latitude"], errors="coerce"
+    )
+    map_data["longitude"] = pd.to_numeric(
+        map_data["longitude"], errors="coerce"
+    )
+    map_data = map_data.dropna(
+        subset=["latitude", "longitude", "sensor_family"]
+    )
+
+    if map_data.empty:
+        return None
+
+    center = {
+        "lat": float(map_data["latitude"].median()),
+        "lon": float(map_data["longitude"].median()),
+    }
+
+    import math
+
+    latitude_span = float(
+        map_data["latitude"].max() - map_data["latitude"].min()
+    )
+    longitude_span = float(
+        map_data["longitude"].max() - map_data["longitude"].min()
+    ) * max(math.cos(math.radians(center["lat"])), 0.1)
+
+    geographic_span = max(latitude_span, longitude_span, 0.05)
+    zoom = max(1, min(12, math.log2(360 / geographic_span) - 1))
 
     hover_columns = [
         column
         for column in [
             "satellite_platform",
-            "acq_date",
+            "acq_datetime_utc",
             "frp_mw",
             "confidence_native",
+            "confidence_scheme",
             "daynight",
             "source_product",
         ]
-        if column in data.columns
+        if column in map_data.columns
     ]
 
+    custom_columns = (
+        ["observation_id"]
+        if "observation_id" in map_data.columns
+        else None
+    )
+
     common_arguments = {
-        "data_frame": data,
+        "data_frame": map_data,
         "lat": "latitude",
         "lon": "longitude",
         "color": "sensor_family",
-        "hover_data": hover_columns,
-        "zoom": 8,
-        "center": {
-            "lat": 11.75,
-            "lon": 76.55,
+        "color_discrete_map": {
+            "VIIRS": "#22D3EE",
+            "MODIS": "#F5A742",
         },
+        "category_orders": {
+            "sensor_family": ["VIIRS", "MODIS"],
+        },
+        "hover_data": hover_columns,
+        "custom_data": custom_columns,
+        "center": center,
+        "zoom": zoom,
         "height": height,
         "template": "plotly_dark",
     }
 
     if hasattr(px, "scatter_map"):
-
         fig = px.scatter_map(
             **common_arguments,
-            map_style="open-street-map",
+            map_style="carto-darkmatter",
         )
-
     else:
-
         fig = px.scatter_mapbox(
             **common_arguments,
-            mapbox_style="open-street-map",
+            mapbox_style="carto-darkmatter",
         )
 
-    fig.update_layout(
-        margin={
-            "r": 0,
-            "t": 25,
-            "l": 0,
-            "b": 0,
+    fig.update_traces(
+        marker={
+            "size": 10,
+            "opacity": 0.9,
         },
-        paper_bgcolor="#07111f",
-        plot_bgcolor="#07111f",
-        legend_title_text="Sensor family",
+        selected=dict(
+            marker=dict(size=13, opacity=1, color="#FFFFFF")
+        ),
+        unselected=dict(
+            marker=dict(opacity=0.42)
+        ),
     )
 
+    fig.update_layout(
+        margin={"r": 0, "t": 12, "l": 0, "b": 0},
+        paper_bgcolor="#07111f",
+        plot_bgcolor="#07111f",
+        legend_title_text="Satellite sensor",
+        legend=dict(
+            bgcolor="rgba(7,17,31,0.86)",
+            bordercolor="#244258",
+            borderwidth=1,
+            font=dict(color="#E2E8F0", size=12),
+        ),
+        hoverlabel=dict(
+            bgcolor="#10283a",
+            bordercolor="#3b7184",
+            font=dict(color="#effaff"),
+        ),
+        uirevision="firesync-fire-map",
+    )
     return fig
+
 
 
 # ============================================================
@@ -554,6 +800,29 @@ st.sidebar.caption(
     f"Filtered observations: {len(df):,} / {len(df_all):,}"
 )
 
+st.sidebar.markdown(
+    f"""
+    <div style="
+        margin-top: 10px;
+        padding: 12px;
+        border: 1px solid #20384d;
+        border-radius: 10px;
+        background: rgba(13, 31, 47, .78);
+        color: #a8bdce;
+        font-size: 11px;
+        line-height: 1.7;
+    ">
+        <div style="color:#55d6d0;font-weight:800;letter-spacing:1.2px;">
+            ARCHIVE CONTEXT
+        </div>
+        <div><b style="color:#e8f1fb;">{len(df_all):,}</b> normalized records</div>
+        <div>{min_date} → {max_date}</div>
+        <div>MODIS + VIIRS · UTC timestamps</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
 st.sidebar.caption(
     "All acquisition timestamps are interpreted as UTC."
 )
@@ -569,25 +838,21 @@ st.sidebar.caption(
 # APPLICATION HEADER
 # ============================================================
 
+
 st.markdown(
-    """
-    <div class="hero">
-
-        <div class="eyebrow">
-            Sensor-aware satellite fire intelligence
-        </div>
-
-        <h1>FIRESYNC</h1>
-
-        <div class="muted">
-            Harmonizing MODIS and VIIRS observations through
-            transparent evidence, candidate associations and uncertainty.
-        </div>
-
-    </div>
-    """,
+    """<div class="hero">
+<div class="eyebrow">Sensor-aware satellite fire intelligence</div>
+<h1>FIRESYNC</h1>
+<div class="muted">
+Two satellites. Different views. One clearer picture.
+<br>
+Harmonizing MODIS and VIIRS observations through transparent
+evidence, candidate associations and uncertainty.
+</div>
+</div>""",
     unsafe_allow_html=True,
 )
+
 
 
 if df.empty:
@@ -605,6 +870,756 @@ if df.empty:
 # ============================================================
 
 if page == "Overview":
+
+    st.markdown(
+        '<div class="section-kicker">MISSION CONTROL  /  PROJECT OVERVIEW</div>',
+        unsafe_allow_html=True,
+    )
+
+    # ========================================================
+    # FIRESYNC 3D OBSERVATORY
+    # ========================================================
+
+    st.markdown(
+        """
+        <div style="
+            padding: 8px 0 14px 0;
+            color: #8ca9c5;
+            letter-spacing: 3px;
+            font-size: 11px;
+            font-weight: 700;
+        ">
+            FIRESYNC / EARTH OBSERVATORY
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Use real coordinates from the currently filtered dataset.
+    globe_data = (
+        df[
+            [
+                "observation_id",
+                "sensor_family",
+                "satellite_platform",
+                "latitude",
+                "longitude",
+                "acq_datetime_utc",
+                "frp_mw",
+                "confidence_class",
+            ]
+        ]
+        .dropna(subset=["latitude", "longitude"])
+        .copy()
+    )
+
+    # Keep the embedded component lightweight for the browser.
+    if len(globe_data) > 3000:
+        globe_data = globe_data.sample(
+            n=3000,
+            random_state=42,
+        )
+
+    globe_data["acq_datetime_utc"] = (
+        globe_data["acq_datetime_utc"].astype(str)
+    )
+
+    observations_json = json.dumps(
+        globe_data.to_dict(orient="records"),
+        default=str,
+    )
+
+    globe_html = r"""
+    <div id="firesync-shell">
+      <div id="firesync-top">
+        <div>
+          <div class="eyebrow">SATELLITE FIRE INTELLIGENCE</div>
+          <div class="heading">Earth Observatory</div>
+          <div class="subheading">
+            Explore satellite-observed thermal anomalies across Earth
+          </div>
+        </div>
+        <div class="live-tag">
+          <span class="live-dot"></span>
+          HISTORICAL DATA
+        </div>
+      </div>
+
+      <div id="globe-layout">
+        <div id="globe-stage">
+          <div id="loading">INITIALIZING 3D EARTH...</div>
+          <div id="globe-label">EARTH / 3D VIEW</div>
+
+          <div id="globe-controls">
+            <button id="rotateBtn">PAUSE ROTATION</button>
+            <button id="videoBtn">PAUSE VIDEO</button>
+            <button id="resetBtn">RESET VIEW</button>
+          </div>
+
+          <div id="globe-legend">
+            <span><i class="dot modis"></i> MODIS</span>
+            <span><i class="dot viirs"></i> VIIRS</span>
+          </div>
+        </div>
+
+        <aside id="info-panel">
+          <div class="panel-label">OBSERVATION LAYERS</div>
+
+          <label class="toggle-row">
+            <span><i class="dot modis"></i> MODIS</span>
+            <input type="checkbox" id="modisToggle" checked>
+          </label>
+
+          <label class="toggle-row">
+            <span><i class="dot viirs"></i> VIIRS</span>
+            <input type="checkbox" id="viirsToggle" checked>
+          </label>
+
+          <div class="panel-divider"></div>
+
+          <div class="panel-label">DATASET OVERVIEW</div>
+          <div class="data-number" id="totalCount">0</div>
+          <div class="data-caption">Mapped observations</div>
+
+          <div class="mini-stat">
+            <span>MODIS</span>
+            <strong id="modisCount">0</strong>
+          </div>
+          <div class="mini-stat">
+            <span>VIIRS</span>
+            <strong id="viirsCount">0</strong>
+          </div>
+
+          <div class="panel-divider"></div>
+
+          <div class="panel-label">SELECTED OBSERVATION</div>
+          <div id="selectedInfo">
+            Select a marker on the globe to inspect its record.
+          </div>
+
+          <div class="panel-note">
+            A satellite thermal anomaly is not necessarily a
+            ground-confirmed fire. Marker positions represent
+            archived observations, not confirmed fire boundaries.
+          </div>
+        </aside>
+      </div>
+
+      <div class="footer-note">
+        NASA VIIRS visualization texture · FIRESYNC historical
+        observations · Drag to rotate · Scroll to zoom
+      </div>
+    </div>
+
+    <style>
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: #050b14;
+        color: #edf5ff;
+        font-family: Arial, sans-serif;
+      }
+
+      #firesync-shell {
+        background:
+          radial-gradient(ellipse at 35% 45%, #10283b, #050b14 72%);
+        border: 1px solid #20384d;
+        border-radius: 18px;
+        padding: 22px;
+        overflow: hidden;
+      }
+
+      #firesync-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 18px;
+      }
+
+      .eyebrow, .panel-label {
+        font-size: 10px;
+        letter-spacing: 2px;
+        color: #70c9db;
+        font-weight: bold;
+      }
+
+      .heading {
+        font-size: 27px;
+        font-weight: 700;
+        margin-top: 6px;
+      }
+
+      .subheading {
+        color: #91a9bd;
+        font-size: 12px;
+        margin-top: 5px;
+      }
+
+      .live-tag {
+        border: 1px solid #315366;
+        border-radius: 30px;
+        padding: 9px 12px;
+        font-size: 9px;
+        letter-spacing: 1px;
+        color: #b6cbd9;
+        white-space: nowrap;
+      }
+
+      .live-dot {
+        display: inline-block;
+        height: 7px;
+        width: 7px;
+        border-radius: 50%;
+        background: #68c7c1;
+        margin-right: 6px;
+      }
+
+      #globe-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 235px;
+        min-height: 540px;
+        border: 1px solid #1c354a;
+        border-radius: 13px;
+        overflow: hidden;
+      }
+
+      #globe-stage {
+        min-width: 0;
+        min-height: 540px;
+        position: relative;
+        background: radial-gradient(circle, #10273a, #030812 75%);
+      }
+
+      #globe-stage canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      #loading {
+        position: absolute;
+        top: 48%;
+        width: 100%;
+        text-align: center;
+        color: #76cbd9;
+        font-size: 11px;
+        letter-spacing: 2px;
+        z-index: 2;
+      }
+
+      #globe-label {
+        position: absolute;
+        top: 16px;
+        left: 18px;
+        color: #91b4c8;
+        font-size: 9px;
+        letter-spacing: 2px;
+        pointer-events: none;
+      }
+
+      #globe-controls {
+        position: absolute;
+        left: 14px;
+        bottom: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      #globe-controls button {
+        background: #10263a;
+        color: #d9edf8;
+        border: 1px solid #34546a;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 9px;
+        cursor: pointer;
+      }
+
+      #globe-controls button:hover {
+        background: #1b4055;
+      }
+
+      #globe-legend {
+        position: absolute;
+        right: 15px;
+        bottom: 18px;
+        display: flex;
+        gap: 13px;
+        color: #c2d3df;
+        font-size: 10px;
+      }
+
+      .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 5px;
+      }
+
+      .modis { background: #ffb45e; }
+      .viirs { background: #62e5e1; }
+
+      #info-panel {
+        background: rgba(8, 19, 32, 0.97);
+        border-left: 1px solid #20384d;
+        padding: 19px 15px;
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #d4e2ed;
+        font-size: 12px;
+        margin-top: 18px;
+        cursor: pointer;
+      }
+
+      .toggle-row input {
+        accent-color: #55d6d2;
+      }
+
+      .panel-divider {
+        border-top: 1px solid #20364a;
+        margin: 21px 0;
+      }
+
+      .data-number {
+        font-size: 34px;
+        font-weight: 700;
+        margin-top: 13px;
+        color: #e9f6ff;
+      }
+
+      .data-caption {
+        font-size: 10px;
+        color: #819caf;
+        margin-top: 2px;
+      }
+
+      .mini-stat {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 15px;
+        color: #9db2c5;
+        font-size: 11px;
+      }
+
+      .mini-stat strong {
+        color: #edf6ff;
+      }
+
+      #selectedInfo {
+        color: #a8bdce;
+        font-size: 11px;
+        line-height: 1.8;
+        margin-top: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      .panel-note {
+        color: #7f98aa;
+        font-size: 10px;
+        line-height: 1.7;
+        margin-top: 24px;
+      }
+
+      .footer-note {
+        color: #718b9f;
+        font-size: 10px;
+        margin-top: 13px;
+        line-height: 1.6;
+      }
+
+      @media(max-width: 650px) {
+        #globe-layout {
+          grid-template-columns: 1fr;
+        }
+        #info-panel {
+          border-left: 0;
+          border-top: 1px solid #20384d;
+        }
+        #globe-stage {
+          min-height: 420px;
+        }
+        #globe-top {
+          flex-wrap: wrap;
+        }
+      }
+    </style>
+
+    <script>
+  window.__FIRESYNC_OBSERVATIONS__ = __OBSERVATIONS__;
+</script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+
+<script type="module">
+  import * as THREE from
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+
+  import { OrbitControls } from
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js";
+
+      const observations = window.__FIRESYNC_OBSERVATIONS__ || [];
+
+      const stage = document.getElementById("globe-stage");
+      const loading = document.getElementById("loading");
+
+      const scene = new THREE.Scene();
+
+      const camera = new THREE.PerspectiveCamera(
+        42,
+        stage.clientWidth / stage.clientHeight,
+        0.1,
+        100
+      );
+
+      camera.position.set(0, 0, 2.8);
+
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true
+      });
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(stage.clientWidth, stage.clientHeight);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+      stage.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(
+        camera,
+        renderer.domElement
+      );
+
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.minDistance = 1.4;
+      controls.maxDistance = 5;
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.45;
+
+      scene.add(new THREE.AmbientLight(0xffffff, 1.3));
+
+      const sun = new THREE.DirectionalLight(0xffffff, 2.0);
+      sun.position.set(4, 2, 5);
+      scene.add(sun);
+
+      // Background stars.
+      const starPositions = [];
+
+      for (let i = 0; i < 1400; i++) {
+        starPositions.push(
+          (Math.random() - 0.5) * 16,
+          (Math.random() - 0.5) * 16,
+          (Math.random() - 0.5) * 16
+        );
+      }
+
+      const starGeometry = new THREE.BufferGeometry();
+
+      starGeometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(starPositions, 3)
+      );
+
+      const stars = new THREE.Points(
+        starGeometry,
+        new THREE.PointsMaterial({
+          color: 0x9bbbd2,
+          size: 0.012
+        })
+      );
+
+      scene.add(stars);
+
+      const earthGroup = new THREE.Group();
+      scene.add(earthGroup);
+
+      const video = document.createElement("video");
+
+      video.src =
+        "/app/static/fires_frp_VIIRS_eq_nl_2048p30.mp4";
+
+      video.crossOrigin = "anonymous";
+      video.loop = true;
+      video.muted = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.preload = "auto";
+
+      const earthGeometry = new THREE.SphereGeometry(
+        1,
+        96,
+        64
+      );
+
+      const earthMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 1,
+        metalness: 0
+      });
+
+      const earth = new THREE.Mesh(
+        earthGeometry,
+        earthMaterial
+      );
+
+      // Invert sphere faces to display the video texture inside
+      // the sphere geometry's normal viewing surface.
+      earthGroup.add(earth);
+
+      const videoTexture = new THREE.VideoTexture(video);
+
+      videoTexture.colorSpace = THREE.SRGBColorSpace;
+
+      earth.material.map = videoTexture;
+      earth.material.needsUpdate = true;
+
+      // Latitude/longitude to spherical coordinates.
+      function geographicPosition(lat, lon, radius) {
+        const phi = (90 - lat) * Math.PI / 180;
+        const theta = (lon + 180) * Math.PI / 180;
+
+        return new THREE.Vector3(
+          -radius * Math.sin(phi) * Math.cos(theta),
+          radius * Math.cos(phi),
+          radius * Math.sin(phi) * Math.sin(theta)
+        );
+      }
+
+      const sensorGroups = {
+        MODIS: new THREE.Group(),
+        VIIRS: new THREE.Group()
+      };
+
+      earthGroup.add(sensorGroups.MODIS);
+      earthGroup.add(sensorGroups.VIIRS);
+
+      const markerRecords = {
+        MODIS: [],
+        VIIRS: []
+      };
+
+      for (const sensor of ["MODIS", "VIIRS"]) {
+        const records = observations.filter(
+          row => row.sensor_family === sensor
+        );
+
+        const positions = [];
+
+        records.forEach((row, index) => {
+          const position = geographicPosition(
+            Number(row.latitude),
+            Number(row.longitude),
+            1.014
+          );
+
+          positions.push(
+            position.x,
+            position.y,
+            position.z
+          );
+
+          markerRecords[sensor].push(row);
+        });
+
+        const geometry = new THREE.BufferGeometry();
+
+        geometry.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(positions, 3)
+        );
+
+        const points = new THREE.Points(
+          geometry,
+          new THREE.PointsMaterial({
+            color: sensor === "MODIS" ? 0xffb45e : 0x62e5e1,
+            size: 0.025,
+            sizeAttenuation: true,
+            transparent: true,
+            opacity: 0.95
+          })
+        );
+
+        points.userData.sensor = sensor;
+        sensorGroups[sensor].add(points);
+      }
+
+      document.getElementById("totalCount").textContent =
+        observations.length.toLocaleString();
+
+      document.getElementById("modisCount").textContent =
+        markerRecords.MODIS.length.toLocaleString();
+
+      document.getElementById("viirsCount").textContent =
+        markerRecords.VIIRS.length.toLocaleString();
+
+      document.getElementById("modisToggle").addEventListener(
+        "change",
+        event => {
+          sensorGroups.MODIS.visible = event.target.checked;
+        }
+      );
+
+      document.getElementById("viirsToggle").addEventListener(
+        "change",
+        event => {
+          sensorGroups.VIIRS.visible = event.target.checked;
+        }
+      );
+
+      document.getElementById("rotateBtn").addEventListener(
+        "click",
+        event => {
+          controls.autoRotate = !controls.autoRotate;
+          event.target.textContent = controls.autoRotate
+            ? "PAUSE ROTATION"
+            : "START ROTATION";
+        }
+      );
+
+      document.getElementById("videoBtn").addEventListener(
+        "click",
+        event => {
+          if (video.paused) {
+            video.play();
+            event.target.textContent = "PAUSE VIDEO";
+          } else {
+            video.pause();
+            event.target.textContent = "PLAY VIDEO";
+          }
+        }
+      );
+
+      document.getElementById("resetBtn").addEventListener(
+        "click",
+        () => {
+          camera.position.set(0, 0, 2.8);
+          controls.target.set(0, 0, 0);
+          controls.update();
+        }
+      );
+
+      // Select nearby observation markers.
+      const raycaster = new THREE.Raycaster();
+      raycaster.params.Points.threshold = 0.035;
+
+      const pointer = new THREE.Vector2();
+
+      renderer.domElement.addEventListener(
+        "click",
+        event => {
+          const rect = renderer.domElement.getBoundingClientRect();
+
+          pointer.x =
+            ((event.clientX - rect.left) / rect.width) * 2 - 1;
+
+          pointer.y =
+            -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+          raycaster.setFromCamera(pointer, camera);
+
+          const visibleGroups = [
+            sensorGroups.MODIS,
+            sensorGroups.VIIRS
+          ].filter(group => group.visible);
+
+          const targets = [];
+
+          visibleGroups.forEach(group => {
+            group.children.forEach(child => targets.push(child));
+          });
+
+          const hits = raycaster.intersectObjects(targets);
+
+          if (!hits.length) return;
+
+          const point = hits[0];
+          const sensor = point.object.userData.sensor;
+          const record = markerRecords[sensor][point.index];
+
+          const details = [
+            ["Sensor", record.sensor_family],
+            ["Platform", record.satellite_platform],
+            ["Latitude", Number(record.latitude).toFixed(4)],
+            ["Longitude", Number(record.longitude).toFixed(4)],
+            ["Acquisition UTC", record.acq_datetime_utc],
+            ["FRP (MW)", record.frp_mw ?? "Not available"],
+            ["Confidence", record.confidence_class ?? "Not available"],
+            ["Observation ID", record.observation_id]
+          ];
+
+          document.getElementById("selectedInfo").innerHTML =
+            details.map(([key, value]) =>
+              `<div><b>${key}:</b> ${String(value)}</div>`
+            ).join("");
+        }
+      );
+
+      // Start video texture when the browser permits autoplay.
+      video.play().catch(() => {
+        document.getElementById("videoBtn").textContent =
+          "PLAY VIDEO";
+      });
+
+      video.addEventListener("loadeddata", () => {
+        loading.style.display = "none";
+      });
+
+      video.addEventListener("error", () => {
+        loading.textContent =
+          "NASA VIDEO UNAVAILABLE — CHECK STATIC FILE ACCESS";
+      });
+
+      // Responsive canvas.
+      const resizeObserver = new ResizeObserver(() => {
+        const width = stage.clientWidth;
+        const height = stage.clientHeight;
+
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(width, height);
+      });
+
+      resizeObserver.observe(stage);
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      animate();
+    </script>
+    """
+
+    globe_html = globe_html.replace(
+        "__OBSERVATIONS__",
+        observations_json,
+    )
+
+    components.html(
+        globe_html,
+        height=750,
+        scrolling=False,
+    )
+
+    st.divider()
+
 
     st.subheader(
         "Historical observation overview"
@@ -661,6 +1676,7 @@ if page == "Overview":
             x="satellite_platform",
             y="Observations",
             color="sensor_family",
+            color_discrete_map={"VIIRS": "#22D3EE", "MODIS": "#F5A742"},
             barmode="group",
             template="plotly_dark",
         )
@@ -671,6 +1687,7 @@ if page == "Overview":
             xaxis_title="Satellite platform",
         )
 
+        fig = style_figure(fig)
         st.plotly_chart(
             fig,
             use_container_width=True,
@@ -698,6 +1715,7 @@ if page == "Overview":
             x="year",
             y="Observations",
             color="sensor_family",
+            color_discrete_map={"VIIRS": "#22D3EE", "MODIS": "#F5A742"},
             barmode="group",
             template="plotly_dark",
         )
@@ -708,6 +1726,7 @@ if page == "Overview":
             xaxis_title="UTC year",
         )
 
+        fig = style_figure(fig)
         st.plotly_chart(
             fig,
             use_container_width=True,
@@ -745,6 +1764,7 @@ if page == "Overview":
         xaxis_title="Month (UTC)",
     )
 
+    fig = style_figure(fig)
     st.plotly_chart(
         fig,
         use_container_width=True,
@@ -784,72 +1804,396 @@ if page == "Overview":
 
 elif page == "Fire Map Explorer":
 
-    st.subheader(
-        "Fire Map Explorer"
-    )
-
-    st.caption(
-        "Explore the locations of archived satellite thermal-anomaly observations."
+    render_module_header(
+        "MODULE 02  /  GEOSPATIAL EXPLORATION",
+        "Fire Map Explorer",
+        "Explore archived MODIS and VIIRS thermal-anomaly observations, "
+        "inspect individual records, and investigate selected map regions.",
     )
 
     st.warning(
-        "Each point represents an individual satellite observation. "
-        "Nearby points may be repeated detections or different observations. "
-        "They are not automatically unique fires."
+        "Each marker is an individual satellite observation. Nearby records "
+        "may represent repeated detections or different overpasses; they are "
+        "not automatically unique fires or confirmed fire perimeters."
     )
 
+    # Stable slider bounds use the complete loaded archive. The current
+    # global filters and local controls are applied after the widgets.
     map_df = df.copy()
 
-    maximum_points = min(
-        5000,
-        max(100, len(map_df)),
+    geo_source = df_all.dropna(subset=["latitude", "longitude"])
+    lat_min = float(geo_source["latitude"].min())
+    lat_max = float(geo_source["latitude"].max())
+    lon_min = float(geo_source["longitude"].min())
+    lon_max = float(geo_source["longitude"].max())
+
+    frp_source = pd.to_numeric(df_all["frp_mw"], errors="coerce")
+    frp_max = float(frp_source.max()) if frp_source.notna().any() else 1.0
+    frp_max = max(frp_max, 1.0)
+
+    with st.expander("MAP FILTERS  /  AREA, INTENSITY & SENSOR CONFIDENCE", expanded=True):
+
+        geo_col, signal_col = st.columns([1.05, 0.95], gap="large")
+
+        with geo_col:
+            st.markdown("##### Geographic extent")
+            latitude_range = st.slider(
+                "Latitude bounds",
+                min_value=lat_min,
+                max_value=lat_max,
+                value=(lat_min, lat_max),
+                step=max((lat_max - lat_min) / 1000, 0.00001),
+                format="%.5f",
+                key="firemap_latitude_range_v2",
+            )
+            longitude_range = st.slider(
+                "Longitude bounds",
+                min_value=lon_min,
+                max_value=lon_max,
+                value=(lon_min, lon_max),
+                step=max((lon_max - lon_min) / 1000, 0.00001),
+                format="%.5f",
+                key="firemap_longitude_range_v2",
+            )
+            st.caption(
+                "Bounds are based on the geographic extent of the loaded archive, "
+                "not an official protected-area boundary."
+            )
+
+        with signal_col:
+            st.markdown("##### Observation characteristics")
+            frp_range = st.slider(
+                "Fire radiative power (MW)",
+                min_value=0.0,
+                max_value=frp_max,
+                value=(0.0, frp_max),
+                step=max(frp_max / 1000, 0.01),
+                key="firemap_frp_range_v2",
+            )
+
+            daynight_options = [
+                value
+                for value in ["D", "N"]
+                if value in df_all["daynight"].dropna().astype(str).str.upper().unique()
+            ]
+            selected_daynight = st.multiselect(
+                "Acquisition illumination",
+                options=daynight_options,
+                default=daynight_options,
+                format_func=lambda value: {"D": "Day", "N": "Night"}.get(value, value),
+                key="firemap_daynight_v2",
+            )
+
+            include_missing_values = st.checkbox(
+                "Retain observations with missing filter values",
+                value=True,
+                key="firemap_include_missing_v2",
+                help=(
+                    "When enabled, records without a value for a selected "
+                    "attribute are retained instead of silently discarded."
+                ),
+            )
+
+        st.divider()
+        st.markdown("##### Native sensor confidence")
+
+        conf_left, conf_right = st.columns(2, gap="large")
+
+        viirs_options = sorted(
+            df_all.loc[
+                df_all["sensor_family"] == "VIIRS",
+                "confidence_native",
+            ]
+            .dropna()
+            .astype(str)
+            .str.lower()
+            .unique()
+            .tolist()
+        )
+
+        with conf_left:
+            st.markdown("**VIIRS · categorical**")
+            selected_viirs_confidence = st.multiselect(
+                "Native confidence classes",
+                options=viirs_options,
+                default=viirs_options,
+                format_func=lambda value: {
+                    "l": "Low (l)",
+                    "n": "Nominal (n)",
+                    "h": "High (h)",
+                }.get(value, value),
+                key="firemap_viirs_confidence_v2",
+            )
+            st.caption("VIIRS classes are preserved as low / nominal / high.")
+
+        with conf_right:
+            st.markdown("**MODIS · numeric**")
+            modis_confidence_range = st.slider(
+                "Native numeric confidence (0–100)",
+                min_value=0.0,
+                max_value=100.0,
+                value=(0.0, 100.0),
+                step=1.0,
+                key="firemap_modis_confidence_v2",
+            )
+            st.caption("MODIS numeric confidence is not interpreted as a fire probability.")
+
+    # --------------------------------------------------------
+    # APPLY LOCAL FILTERS
+    # --------------------------------------------------------
+
+    latitude_values = pd.to_numeric(map_df["latitude"], errors="coerce")
+    longitude_values = pd.to_numeric(map_df["longitude"], errors="coerce")
+    frp_values = pd.to_numeric(map_df["frp_mw"], errors="coerce")
+    family_values = map_df["sensor_family"].astype(str)
+
+    daynight_values = (
+        map_df["daynight"].astype("string").str.upper()
+        if "daynight" in map_df.columns
+        else pd.Series(pd.NA, index=map_df.index, dtype="string")
+    )
+    viirs_confidence_values = (
+        map_df["confidence_native"].astype("string").str.lower()
+        if "confidence_native" in map_df.columns
+        else pd.Series(pd.NA, index=map_df.index, dtype="string")
+    )
+    modis_confidence_values = pd.to_numeric(
+        map_df["confidence_numeric"], errors="coerce"
     )
 
-    default_points = min(
-        2000,
-        maximum_points,
+    missing_pass = include_missing_values
+
+    geographic_mask = (
+        latitude_values.between(*latitude_range)
+        & longitude_values.between(*longitude_range)
+    )
+    frp_mask = frp_values.between(*frp_range) | (
+        frp_values.isna() & missing_pass
+    )
+    daynight_mask = daynight_values.isin(selected_daynight) | (
+        daynight_values.isna() & missing_pass
+    )
+    viirs_mask = (
+        family_values.ne("VIIRS")
+        | viirs_confidence_values.isin(selected_viirs_confidence)
+        | (viirs_confidence_values.isna() & missing_pass)
+    )
+    modis_mask = (
+        family_values.ne("MODIS")
+        | modis_confidence_values.between(*modis_confidence_range)
+        | (modis_confidence_values.isna() & missing_pass)
     )
 
-    max_points = st.slider(
-        "Maximum points to display",
-        min_value=100,
-        max_value=maximum_points,
-        value=default_points,
-        step=100,
-    )
+    filtered_map_df = map_df.loc[
+        geographic_mask
+        & frp_mask
+        & daynight_mask
+        & viirs_mask
+        & modis_mask
+    ].copy()
 
-    if len(map_df) > max_points:
-
-        map_df = map_df.sample(
-            max_points,
+    # Render every record for the current archive. A cap is only offered
+    # when future datasets grow beyond 5,000 records.
+    map_display_df = filtered_map_df
+    if len(filtered_map_df) > 5000:
+        point_limit = st.slider(
+            "Map rendering limit",
+            min_value=1000,
+            max_value=min(10000, len(filtered_map_df)),
+            value=5000,
+            step=500,
+            key="firemap_point_limit_v2",
+            help="The observation register retains the full filtered dataset.",
+        )
+        map_display_df = filtered_map_df.sample(
+            n=point_limit,
             random_state=42,
         )
 
-    fig = create_map(map_df)
+    total_filtered = len(filtered_map_df)
+    modis_filtered = int((filtered_map_df["sensor_family"] == "MODIS").sum())
+    viirs_filtered = int((filtered_map_df["sensor_family"] == "VIIRS").sum())
+    median_frp = pd.to_numeric(
+        filtered_map_df["frp_mw"], errors="coerce"
+    ).median()
 
-    if fig is not None:
+    metric_cols = st.columns(4)
+    metric_cols[0].metric("Filtered observations", f"{total_filtered:,}")
+    metric_cols[1].metric("VIIRS records", f"{viirs_filtered:,}")
+    metric_cols[2].metric("MODIS records", f"{modis_filtered:,}")
+    metric_cols[3].metric(
+        "Median FRP",
+        f"{median_frp:.2f} MW" if pd.notna(median_frp) else "—",
+    )
 
-        st.plotly_chart(
-            fig,
-            use_container_width=True,
+    st.markdown("##### Regional observation map")
+    st.caption(
+        "VIIRS is shown in cyan; MODIS is shown in amber. "
+        "Use the map toolbar to zoom, pan, select individual points, "
+        "or draw a rectangle / lasso around a group of observations."
+    )
+
+    map_event = None
+    selected_ids = []
+    selected_observations = pd.DataFrame()
+
+    if filtered_map_df.empty:
+        st.info(
+            "No observations match the current global and local filters. "
+            "Widen the geographic, FRP, day/night or confidence selections."
+        )
+    else:
+        fig = create_map(map_display_df, height=650)
+
+        if fig is not None:
+            map_event = st.plotly_chart(
+                fig,
+                use_container_width=True,
+                key="firesync_fire_map_selection_v2",
+                on_select="rerun",
+                selection_mode=("points", "box", "lasso"),
+                config={
+                    "displaylogo": False,
+                    "scrollZoom": True,
+                    "modeBarButtonsToAdd": ["select2d", "lasso2d"],
+                },
+            )
+
+            selection_data = map_event.get("selection", {})
+            selected_points = selection_data.get("points", [])
+
+            for point in selected_points:
+                custom_data = point.get("customdata")
+                if isinstance(custom_data, (list, tuple)) and custom_data:
+                    selected_ids.append(str(custom_data[0]))
+
+            selected_ids = list(dict.fromkeys(selected_ids))
+
+            if selected_ids:
+                selected_observations = filtered_map_df.loc[
+                    filtered_map_df["observation_id"].astype(str).isin(selected_ids)
+                ].copy()
+
+    # --------------------------------------------------------
+    # SELECTION INVESTIGATION + PRIMARY RECORD INSPECTOR
+    # --------------------------------------------------------
+
+    if not selected_observations.empty:
+        st.markdown("##### Selection investigation")
+
+        selection_counts = selected_observations["sensor_family"].value_counts()
+        selection_frp = pd.to_numeric(
+            selected_observations["frp_mw"], errors="coerce"
+        )
+        selection_metrics = st.columns(4)
+        selection_metrics[0].metric(
+            "Selected observations", f"{len(selected_observations):,}"
+        )
+        selection_metrics[1].metric(
+            "VIIRS selected", f"{selection_counts.get('VIIRS', 0):,}"
+        )
+        selection_metrics[2].metric(
+            "MODIS selected", f"{selection_counts.get('MODIS', 0):,}"
+        )
+        selection_median = selection_frp.median()
+        selection_metrics[3].metric(
+            "Selection median FRP",
+            f"{selection_median:.2f} MW"
+            if pd.notna(selection_median)
+            else "—",
         )
 
-    st.caption(
-        f"Displaying {len(map_df):,} of {len(df):,} filtered observations."
-    )
+        primary_record = selected_observations.iloc[0]
+        with st.expander("Primary selected observation · inspect record", expanded=True):
+            detail_cols = st.columns(4)
+            detail_cols[0].metric(
+                "Sensor", str(primary_record.get("sensor_family", "—"))
+            )
+            detail_cols[1].metric(
+                "Platform", str(primary_record.get("satellite_platform", "—"))
+            )
+            primary_frp = primary_record.get("frp_mw")
+            detail_cols[2].metric(
+                "FRP",
+                f"{float(primary_frp):.2f} MW"
+                if pd.notna(primary_frp)
+                else "—",
+            )
+            detail_cols[3].metric(
+                "Native confidence",
+                str(primary_record.get("confidence_native", "—")),
+            )
 
-    st.markdown(
-        "#### Observation records"
-    )
+            detail_fields = [
+                "observation_id",
+                "acq_datetime_utc",
+                "latitude",
+                "longitude",
+                "confidence_scheme",
+                "daynight",
+                "source_product",
+                "scan_native",
+                "track_native",
+            ]
+            detail_table = pd.DataFrame(
+                [
+                    {
+                        "Field": field,
+                        "Value": str(primary_record.get(field, "—")),
+                    }
+                    for field in detail_fields
+                    if field in selected_observations.columns
+                ]
+            )
+            show_table(detail_table, 280)
 
-    show_table(
-        df[
-            observation_columns(df)
+        st.download_button(
+            "Download selected observations · CSV",
+            data=selected_observations.to_csv(index=False),
+            file_name="firesync_selected_observations.csv",
+            mime="text/csv",
+            key="firemap_download_selected_v2",
+        )
+        st.caption(
+            "A selected group is a set of mapped detections, not a confirmed "
+            "single fire, fire perimeter or physical event."
+        )
+    else:
+        st.info(
+            "Select one or more map points with the point, box or lasso tool "
+            "to open the observation inspector and selection summary."
+        )
+
+    # --------------------------------------------------------
+    # FULL FILTERED OBSERVATION REGISTER
+    # --------------------------------------------------------
+
+    st.divider()
+    st.markdown("##### Filtered observation register")
+
+    if not filtered_map_df.empty:
+        register = filtered_map_df[
+            observation_columns(filtered_map_df)
         ].sort_values(
             "acq_datetime_utc",
             ascending=False,
-        ),
-        450,
+        )
+
+        st.download_button(
+            "Download all filtered observations · CSV",
+            data=register.to_csv(index=False),
+            file_name="firesync_filtered_observations.csv",
+            mime="text/csv",
+            key="firemap_download_filtered_v2",
+        )
+        show_table(register, 430)
+    else:
+        st.info("The observation register is empty for the current filters.")
+
+    st.caption(
+        f"Showing {len(map_display_df):,} points on the map from "
+        f"{len(filtered_map_df):,} locally filtered records. "
+        "The table and CSV retain the complete filtered set."
     )
 
 
@@ -859,13 +2203,11 @@ elif page == "Fire Map Explorer":
 
 elif page == "Activity Calendar":
 
-    st.subheader(
-        "Historical activity calendar"
-    )
-
-    st.caption(
-        "A calendar of retrieved detections separated by sensor family. "
-        "This is not a ground-truth fire-occurrence calendar."
+    render_module_header(
+        "MODULE 03  /  TEMPORAL PATTERNS",
+        "Historical Activity Calendar",
+        "Explore daily and monthly retrieval patterns by sensor family. "
+        "Observed counts describe the archive, not ground-truth fire occurrence.",
     )
 
     calendar_df = df.copy()
@@ -883,6 +2225,32 @@ elif page == "Activity Calendar":
         .reset_index(name="observations")
     )
 
+    total_calendar_records = len(calendar_df)
+    active_days = int(calendar_df["date"].nunique())
+    daily_totals = daily.groupby("date")["observations"].sum()
+    peak_day = daily_totals.idxmax() if not daily_totals.empty else None
+    calendar_median_frp = pd.to_numeric(
+        calendar_df["frp_mw"], errors="coerce"
+    ).median()
+
+    calendar_metrics = st.columns(4)
+    calendar_metrics[0].metric(
+        "Archived observations", f"{total_calendar_records:,}"
+    )
+    calendar_metrics[1].metric(
+        "Dates with records", f"{active_days:,}"
+    )
+    calendar_metrics[2].metric(
+        "Highest retrieval day",
+        str(peak_day) if peak_day is not None else "—",
+    )
+    calendar_metrics[3].metric(
+        "Median FRP",
+        f"{calendar_median_frp:.2f} MW"
+        if pd.notna(calendar_median_frp)
+        else "—",
+    )
+
     left, right = st.columns(2)
 
     with left:
@@ -896,6 +2264,7 @@ elif page == "Activity Calendar":
             x="date",
             y="observations",
             color="sensor_family",
+            color_discrete_map={"VIIRS": "#22D3EE", "MODIS": "#F5A742"},
             markers=True,
             template="plotly_dark",
         )
@@ -907,6 +2276,7 @@ elif page == "Activity Calendar":
             yaxis_title="Retrieved observations",
         )
 
+        fig = style_figure(fig)
         st.plotly_chart(
             fig,
             use_container_width=True,
@@ -937,6 +2307,7 @@ elif page == "Activity Calendar":
             x="month",
             y="observations",
             color="sensor_family",
+            color_discrete_map={"VIIRS": "#22D3EE", "MODIS": "#F5A742"},
             barmode="group",
             template="plotly_dark",
         )
@@ -946,6 +2317,7 @@ elif page == "Activity Calendar":
             plot_bgcolor="#07111f",
         )
 
+        fig = style_figure(fig)
         st.plotly_chart(
             fig,
             use_container_width=True,
@@ -988,13 +2360,11 @@ elif page == "Activity Calendar":
 
 elif page == "Association Explorer":
 
-    st.subheader(
-        "MODIS–VIIRS candidate association explorer"
-    )
-
-    st.caption(
-        "Spatially and temporally constrained candidate links. "
-        "No link is a confirmed same-fire determination."
+    render_module_header(
+        "MODULE 04  /  CROSS-SENSOR RELATIONSHIPS",
+        "MODIS–VIIRS Association Explorer",
+        "Investigate spatially and temporally constrained candidate links. "
+        "Associations remain hypotheses, not confirmed same-fire determinations.",
     )
 
     col1, col2, col3 = st.columns(3)
@@ -1188,6 +2558,7 @@ elif page == "Association Explorer":
                 plot_bgcolor="#07111f",
             )
 
+            fig = style_figure(fig)
             st.plotly_chart(
                 fig,
                 use_container_width=True,
@@ -1220,14 +2591,11 @@ elif page == "Association Explorer":
 
 elif page == "Harmonization Lab":
 
-    st.subheader(
-        "Harmonization Lab"
-    )
-
-    st.caption(
-        "Inspect sensor differences, candidate matching sensitivity "
-        "and confidence semantics without forcing unlike measurements "
-        "into one scale."
+    render_module_header(
+        "MODULE 05  /  SENSOR COMPARISON",
+        "Harmonization Lab",
+        "Compare native confidence, measurement channels and association sensitivity "
+        "without forcing unlike sensor measurements into a shared scale.",
     )
 
     modis = df[
@@ -1367,6 +2735,16 @@ elif page == "Harmonization Lab":
         default=[0.5, 1.0, 2.0],
     )
 
+    sensitivity_signature = (
+        len(df),
+        str(start_date),
+        str(end_date),
+        tuple(selected_platforms),
+        tuple(selected_sensors),
+        float(sensitivity_time),
+        tuple(sorted(thresholds)),
+    )
+
     if st.button(
         "Calculate sensitivity",
         type="primary",
@@ -1412,8 +2790,15 @@ elif page == "Harmonization Lab":
             st.session_state["sensitivity_results"] = (
                 pd.DataFrame(records)
             )
+            st.session_state["sensitivity_signature"] = (
+                sensitivity_signature
+            )
 
-    if "sensitivity_results" in st.session_state:
+    if (
+        "sensitivity_results" in st.session_state
+        and st.session_state.get("sensitivity_signature")
+        == sensitivity_signature
+    ):
 
         sensitivity = st.session_state[
             "sensitivity_results"
@@ -1438,8 +2823,14 @@ elif page == "Harmonization Lab":
         )
 
         st.plotly_chart(
-            fig,
+            style_figure(fig),
             use_container_width=True,
+        )
+
+    elif "sensitivity_results" in st.session_state:
+        st.info(
+            "Sensitivity inputs changed. Recalculate to refresh these results "
+            "for the current global filters and thresholds."
         )
 
     st.divider()
@@ -1470,6 +2861,16 @@ elif page == "Harmonization Lab":
         value=60,
         step=5,
         key="benchmark_time",
+    )
+
+    benchmark_signature = (
+        len(df),
+        str(start_date),
+        str(end_date),
+        tuple(selected_platforms),
+        tuple(selected_sensors),
+        float(benchmark_distance),
+        float(benchmark_time),
     )
 
     if st.button(
@@ -1573,6 +2974,9 @@ elif page == "Harmonization Lab":
             st.session_state["benchmark_result"] = (
                 benchmark_result
             )
+            st.session_state["benchmark_signature"] = (
+                benchmark_signature
+            )
 
         except Exception as exc:
 
@@ -1580,15 +2984,45 @@ elif page == "Harmonization Lab":
                 f"Benchmark failed: {exc}"
             )
 
-    if "benchmark_result" in st.session_state:
+    if (
+        "benchmark_result" in st.session_state
+        and st.session_state.get("benchmark_signature")
+        == benchmark_signature
+    ):
 
         benchmark_result = st.session_state[
             "benchmark_result"
         ]
 
-        st.json(
-            benchmark_result,
-            expanded=True,
+        benchmark_metrics = st.columns(4)
+        benchmark_metrics[0].metric(
+            "Reference runtime",
+            f"{benchmark_result['Reference runtime (seconds)']:.3f} s",
+        )
+        benchmark_metrics[1].metric(
+            "Optimized runtime",
+            f"{benchmark_result['Optimized runtime (seconds)']:.3f} s",
+        )
+        benchmark_metrics[2].metric(
+            "Measured speedup",
+            f"{benchmark_result['Measured speedup']:.2f}×"
+            if pd.notna(benchmark_result["Measured speedup"])
+            else "—",
+        )
+        benchmark_metrics[3].metric(
+            "Candidate edges",
+            f"{benchmark_result['Reference edges']:,}",
+        )
+
+        show_table(
+            pd.DataFrame(
+                [
+                    {"Validation check": "Candidate edge IDs", "Identical": benchmark_result["Candidate edge IDs identical"]},
+                    {"Validation check": "Cluster memberships", "Identical": benchmark_result["Cluster memberships identical"]},
+                    {"Validation check": "Unmatched observation IDs", "Identical": benchmark_result["Unmatched IDs identical"]},
+                ]
+            ),
+            180,
         )
 
         identical = all(
@@ -1619,6 +3053,12 @@ elif page == "Harmonization Lab":
             "and execution order. They are not a global scalability claim."
         )
 
+    elif "benchmark_result" in st.session_state:
+        st.info(
+            "Benchmark inputs or global filters changed. Run the comparison "
+            "again to refresh the evidence for the current configuration."
+        )
+
     st.warning(
         "Sensitivity and benchmark outputs describe algorithm behavior "
         "under selected conditions. They do not establish an optimal "
@@ -1632,13 +3072,11 @@ elif page == "Harmonization Lab":
 
 elif page == "Activity Investigation":
 
-    st.subheader(
-        "Activity Investigation"
-    )
-
-    st.caption(
-        "Inspect individual observations or explore their candidate "
-        "association clusters."
+    render_module_header(
+        "MODULE 06  /  RECORD-LEVEL INVESTIGATION",
+        "Activity Investigation",
+        "Trace an observation by its unique identifier or inspect the members "
+        "and internal candidate links of a generated association cluster.",
     )
 
     st.markdown(
@@ -1684,6 +3122,7 @@ elif page == "Activity Investigation":
 
             if fig is not None:
 
+                fig = style_figure(fig)
                 st.plotly_chart(
                     fig,
                     use_container_width=True,
@@ -1842,6 +3281,7 @@ elif page == "Activity Investigation":
 
             if fig is not None:
 
+                fig = style_figure(fig)
                 st.plotly_chart(
                     fig,
                     use_container_width=True,
@@ -1881,211 +3321,213 @@ elif page == "Activity Investigation":
 
 elif page == "Evidence Centre":
 
-    st.subheader(
-        "Evidence Centre"
+    render_module_header(
+        "MODULE 07  /  PROVENANCE & SCIENTIFIC SAFEGUARDS",
+        "Evidence Centre",
+        "Review the normalized archive, processing provenance, benchmark evidence, "
+        "methodological choices and interpretation limits.",
     )
 
-    st.caption(
-        "Dataset provenance, processing evidence, methodology "
-        "and known limitations."
+    provenance_tab, coverage_tab, benchmark_tab, methods_tab, schema_tab = st.tabs(
+        [
+            "Dataset provenance",
+            "Platform coverage",
+            "Engine evidence",
+            "Methodology & limits",
+            "Data schema",
+        ]
     )
 
-    st.markdown(
-        "#### Dataset identity"
-    )
+    with provenance_tab:
+        st.markdown("##### Dataset identity")
 
-    provenance = {
-        "Dataset": DATA_FILE.name,
-        "Records": f"{len(df_all):,}",
-        "Columns": len(df_all.columns),
-        "First UTC timestamp": str(
-            df_all["acq_datetime_utc"].min()
-        ),
-        "Last UTC timestamp": str(
-            df_all["acq_datetime_utc"].max()
-        ),
-        "Source products": (
-            ", ".join(
-                sorted(
-                    df_all["source_product"]
-                    .dropna()
-                    .astype(str)
-                    .unique()
-                )
-            )
-            if "source_product" in df_all.columns
-            else "Not available"
-        ),
-    }
-
-    show_table(
-        pd.DataFrame(
-            [
-                {
-                    "Field": key,
-                    "Value": value,
-                }
-                for key, value in provenance.items()
-            ]
-        ),
-        280,
-    )
-
-    st.markdown(
-        "#### Platform coverage in normalized archive"
-    )
-
-    platform_summary = (
-        df_all.groupby(
-            ["sensor_family", "satellite_platform"],
-            dropna=False,
-        )
-        .agg(
-            observations=("observation_id", "count"),
-            first_utc=("acq_datetime_utc", "min"),
-            last_utc=("acq_datetime_utc", "max"),
-        )
-        .reset_index()
-    )
-
-    show_table(
-        platform_summary,
-        300,
-    )
-
-    st.divider()
-
-    st.markdown(
-        "#### Historical engine benchmark evidence"
-    )
-
-    report = safe_read_json(
-        ENGINE_REPORT
-    )
-
-    if report is not None:
-
-        st.json(
-            report,
-            expanded=False,
-        )
-
-    elif ENGINE_CSV.exists():
-
-        try:
-
-            benchmark = pd.read_csv(
-                ENGINE_CSV
-            )
-
-            show_table(
-                benchmark,
-                350,
-            )
-
-        except Exception as exc:
-
-            st.warning(
-                f"Benchmark CSV could not be read: {exc}"
-            )
-
-    else:
-
-        st.info(
-            "Historical engine benchmark report was not found "
-            "at the expected path. The application does not "
-            "invent or recreate the historical benchmark."
-        )
-
-    st.divider()
-
-    st.markdown(
-        "#### Boundary provenance documentation"
-    )
-
-    for document in BOUNDARY_DOCS:
-
-        if document.exists():
-
-            with st.expander(document.name):
-
-                st.markdown(
-                    document.read_text(
-                        encoding="utf-8"
+        provenance = {
+            "Dataset": DATA_FILE.name,
+            "Records": f"{len(df_all):,}",
+            "Columns": len(df_all.columns),
+            "First UTC timestamp": str(df_all["acq_datetime_utc"].min()),
+            "Last UTC timestamp": str(df_all["acq_datetime_utc"].max()),
+            "Source products": (
+                ", ".join(
+                    sorted(
+                        df_all["source_product"].dropna().astype(str).unique()
                     )
                 )
+                if "source_product" in df_all.columns
+                else "Not available"
+            ),
+            "Sensor families": ", ".join(
+                sorted(df_all["sensor_family"].dropna().astype(str).unique())
+            ),
+        }
 
+        show_table(
+            pd.DataFrame(
+                [{"Field": key, "Value": value} for key, value in provenance.items()]
+            ),
+            330,
+        )
+
+        st.download_button(
+            "Download normalized dataset manifest · CSV",
+            data=pd.DataFrame(
+                [{"Field": key, "Value": value} for key, value in provenance.items()]
+            ).to_csv(index=False),
+            file_name="firesync_dataset_manifest.csv",
+            mime="text/csv",
+            key="evidence_manifest_download",
+        )
+
+    with coverage_tab:
+        st.markdown("##### Platform coverage in normalized archive")
+
+        platform_summary = (
+            df_all.groupby(
+                ["sensor_family", "satellite_platform"],
+                dropna=False,
+            )
+            .agg(
+                observations=("observation_id", "count"),
+                first_utc=("acq_datetime_utc", "min"),
+                last_utc=("acq_datetime_utc", "max"),
+            )
+            .reset_index()
+        )
+
+        coverage_metrics = st.columns(3)
+        coverage_metrics[0].metric(
+            "Sensor families",
+            f"{df_all['sensor_family'].nunique():,}",
+        )
+        coverage_metrics[1].metric(
+            "Platforms",
+            f"{df_all['satellite_platform'].nunique():,}",
+        )
+        coverage_metrics[2].metric(
+            "Source products",
+            f"{df_all['source_product'].nunique():,}"
+            if "source_product" in df_all.columns
+            else "—",
+        )
+
+        show_table(platform_summary, 360)
+
+    with benchmark_tab:
+        st.markdown("##### Historical engine benchmark evidence")
+
+        report = safe_read_json(ENGINE_REPORT)
+
+        if report is not None:
+            if isinstance(report, dict) and "read_error" in report:
+                st.warning(f"Benchmark report could not be read: {report['read_error']}")
+            else:
+                st.json(report, expanded=False)
+
+        elif ENGINE_CSV.exists():
+            try:
+                benchmark = pd.read_csv(ENGINE_CSV)
+                show_table(benchmark, 380)
+                st.download_button(
+                    "Download benchmark evidence · CSV",
+                    data=benchmark.to_csv(index=False),
+                    file_name="firesync_engine_benchmark_evidence.csv",
+                    mime="text/csv",
+                    key="evidence_benchmark_download",
+                )
+            except Exception as exc:
+                st.warning(f"Benchmark CSV could not be read: {exc}")
         else:
-
-            st.caption(
-                f"Not found: {document.relative_to(ROOT)}"
+            st.info(
+                "The historical engine benchmark report was not found at the "
+                "expected path. FIRESYNC does not invent or recreate historical results."
             )
 
-    st.divider()
+        st.caption(
+            "Runtime figures are specific to their recorded machine, data and "
+            "execution conditions. They are not a general scalability guarantee."
+        )
 
-    st.markdown(
-        "#### Scientific safeguards"
-    )
+    with methods_tab:
+        st.markdown("##### Boundary provenance documentation")
 
-    st.markdown(
-        """
-        **Sensor differences**
+        for document in BOUNDARY_DOCS:
+            if document.exists():
+                with st.expander(document.name):
+                    st.markdown(
+                        document.read_text(encoding="utf-8")
+                    )
+            else:
+                st.caption(f"Not found: {document.relative_to(ROOT)}")
 
-        - MODIS nominal active-fire detection resolution is approximately 1 km.
-        - VIIRS nominal active-fire detection resolution is approximately 375 m.
-        - Raw MODIS and VIIRS detection counts are not directly equivalent.
-        - MODIS numeric confidence and VIIRS categorical confidence remain separate.
-        - Sensor-specific brightness channels remain separate.
+        st.divider()
+        st.markdown("##### Scientific safeguards")
 
-        **Association limitations**
+        st.markdown(
+            """
+            **Sensor differences**
 
-        - Candidate links use spatial and temporal thresholds.
-        - Candidate links do not confirm the same physical fire.
-        - Connected components may exhibit transitive chaining.
-        - Cluster-wide extents may exceed an individual edge threshold.
-        - One-to-many and many-to-many relationships are retained.
+            - MODIS nominal active-fire detection resolution is approximately 1 km.
+            - VIIRS nominal active-fire detection resolution is approximately 375 m.
+            - Raw MODIS and VIIRS detection counts are not directly equivalent.
+            - MODIS numeric confidence and VIIRS categorical confidence remain separate.
+            - Sensor-specific brightness channels remain separate.
 
-        **Spatial limitations**
+            **Association limitations**
 
-        - Native scan and track values are preserved.
-        - Scan and track are not treated as measured pixel-footprint geometry.
-        - H3 or grid aggregation is not equivalent to sensor pixel geometry.
-        - The Bandipur landscape acquisition rectangle is not an official reserve boundary.
+            - Candidate links use spatial and temporal thresholds.
+            - Candidate links do not confirm the same physical fire.
+            - Connected components may exhibit transitive chaining.
+            - Cluster-wide extents may exceed an individual edge threshold.
+            - One-to-many and many-to-many relationships are retained.
 
-        **Interpretation limitations**
+            **Spatial limitations**
 
-        - A zero-record date is not proof of no fire.
-        - A zero-record date does not establish sensor non-coverage.
-        - Burned-area products are contextual evidence, not ground truth for individual detections.
-        - Satellite thermal anomalies are not ground-confirmed wildfire events.
-        """
-    )
+            - Native scan and track values are preserved.
+            - Scan and track are not treated as measured pixel-footprint geometry.
+            - H3 or grid aggregation is not equivalent to sensor pixel geometry.
+            - The Bandipur landscape acquisition rectangle is not an official reserve boundary.
 
-    st.divider()
+            **Interpretation limitations**
 
-    st.markdown(
-        "#### Full normalized dataset schema"
-    )
+            - A zero-record date is not proof of no fire.
+            - A zero-record date does not establish sensor non-coverage.
+            - Burned-area products are contextual evidence, not ground truth for individual detections.
+            - Satellite thermal anomalies are not ground-confirmed wildfire events.
+            """
+        )
 
-    schema = pd.DataFrame(
-        {
-            "Column": df_all.columns,
-            "Data type": df_all.dtypes.astype(str).values,
-            "Non-null values": [
-                int(df_all[column].notna().sum())
-                for column in df_all.columns
-            ],
-        }
-    )
+    with schema_tab:
+        st.markdown("##### Full normalized dataset schema")
 
-    show_table(
-        schema,
-        460,
-    )
+        schema = pd.DataFrame(
+            {
+                "Column": df_all.columns,
+                "Data type": df_all.dtypes.astype(str).values,
+                "Non-null values": [
+                    int(df_all[column].notna().sum())
+                    for column in df_all.columns
+                ],
+                "Missing values": [
+                    int(df_all[column].isna().sum())
+                    for column in df_all.columns
+                ],
+            }
+        )
+
+        show_table(schema, 500)
+
+        st.download_button(
+            "Download schema · CSV",
+            data=schema.to_csv(index=False),
+            file_name="firesync_dataset_schema.csv",
+            mime="text/csv",
+            key="evidence_schema_download",
+        )
 
 
 # ============================================================
 # FOOTER
+# ============================================================
 # ============================================================
 
 st.divider()
